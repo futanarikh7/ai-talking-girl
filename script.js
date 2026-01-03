@@ -6,7 +6,8 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.set(0, 1.6, 3);
+camera.position.set(0, 1.5, 2.5);
+camera.lookAt(0, 1.4, 0);
 
 const renderer = new THREE.WebGLRenderer({ alpha:true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -23,17 +24,25 @@ scene.add(light);
 const loader = new THREE.GLTFLoader();
 let girl, mixer, idleAnim, talkAnim;
 
-loader.load("girl.glb", gltf => {
-  girl = gltf.scene;
-  scene.add(girl);
+loader.load(
+  "girl.glb",
+  function (gltf) {
+    girl = gltf.scene;
+    scene.add(girl);
 
-  mixer = new THREE.AnimationMixer(girl);
+    mixer = new THREE.AnimationMixer(girl);
 
-  idleAnim = mixer.clipAction(gltf.animations[0]);
-  talkAnim = mixer.clipAction(gltf.animations[1]);
-
-  idleAnim.play();
-});
+    if (gltf.animations.length > 0) {
+      idleAnim = mixer.clipAction(gltf.animations[0]);
+      idleAnim.play();
+    }
+  },
+  undefined,
+  function (error) {
+    console.error("GLB LOAD ERROR:", error);
+    alert("Model failed to load");
+  }
+);
 
 function startTalking(){
   idleAnim.fadeOut(0.3);
@@ -102,5 +111,6 @@ function animate(){
   if(mixer) mixer.update(0.016);
   lipSync();
   renderer.render(scene, camera);
+  renderer.setClearColor(0x111111, 1);
 }
 animate();
