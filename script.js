@@ -6,8 +6,8 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.set(0, 1.5, 2.5);
-camera.lookAt(0, 1.4, 0);
+camera.position.set(0, 1.6, 2.2);
+camera.lookAt(0, 1.5, 0);
 
 const renderer = new THREE.WebGLRenderer({ alpha:true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -24,17 +24,25 @@ scene.add(light);
 const loader = new THREE.GLTFLoader();
 let girl, mixer, idleAnim, talkAnim;
 
-loader.load(
-  "girl.glb",
-  function (gltf) {
-    girl = gltf.scene;
-    scene.add(girl);
+girl = gltf.scene;
 
-    mixer = new THREE.AnimationMixer(girl);
+// FORCE SCALE (ReadyPlayerMe fix)
+girl.scale.set(1.2, 1.2, 1.2);
 
-    if (gltf.animations.length > 0) {
-      idleAnim = mixer.clipAction(gltf.animations[0]);
-      idleAnim.play();
+// FORCE POSITION (bring model in front of camera)
+girl.position.set(0, -1.4, 0);
+
+// FACE CAMERA
+girl.rotation.y = Math.PI;
+
+// ADD TO SCENE
+scene.add(girl);
+
+    if (gltf.animations && gltf.animations.length > 0) {
+  mixer = new THREE.AnimationMixer(girl);
+  idleAnim = mixer.clipAction(gltf.animations[0]);
+  idleAnim.play();
+}
     }
   },
   undefined,
@@ -110,6 +118,7 @@ function animate(){
   requestAnimationFrame(animate);
   if(mixer) mixer.update(0.016);
   lipSync();
+  if (girl) girl.rotation.y += 0.003;
   renderer.render(scene, camera);
   renderer.setClearColor(0x111111, 1);
 }
