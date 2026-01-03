@@ -6,11 +6,19 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.set(0, 1.6, 2.2);
-camera.lookAt(0, 1.5, 0);
+camera.position.set(0, 1.6, 2.8);
+camera.lookAt(0, 1.4, 0);
 
-const renderer = new THREE.WebGLRenderer({ alpha:true });
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  alpha: true
+});
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.setClearColor(0x000000, 1);
+
+document.getElementById("scene").appendChild(renderer.domElement);
 document.getElementById("scene").appendChild(renderer.domElement);
 
 // LIGHT
@@ -20,7 +28,41 @@ const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(1,2,3);
 scene.add(light);
 
+const frontLight = new THREE.DirectionalLight(0xffffff, 1.5);
+frontLight.position.set(0, 2, 3);
+scene.add(frontLight);
+
+const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+scene.add(ambient);
+
 // LOAD MODEL
+loader.load(
+  "girl.glb",
+  function (gltf) {
+    girl = gltf.scene;
+
+    // FORCE VISIBILITY
+    girl.scale.set(1, 1, 1);
+    girl.position.set(0, -1.6, 0);
+    girl.rotation.y = Math.PI;
+
+    // MAKE SURE ALL MESHES ARE VISIBLE
+    girl.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.visible = true;
+        obj.frustumCulled = false;
+      }
+    });
+
+    scene.add(girl);
+  },
+  undefined,
+  function (error) {
+    alert("❌ Model failed to load");
+    console.error(error);
+  }
+);
+
 const loader = new THREE.GLTFLoader();
 let girl, mixer, idleAnim, talkAnim;
 
@@ -114,12 +156,13 @@ function changeOutfit(){
   girl.scale.set(outfit ? 1.05 : 1, 1, 1);
 }
 
-function animate(){
+function animate() {
   requestAnimationFrame(animate);
-  if(mixer) mixer.update(0.016);
-  lipSync();
-  if (girl) girl.rotation.y += 0.003;
+
+  if (girl) {
+    girl.rotation.y += 0.003;
+  }
+
   renderer.render(scene, camera);
-  renderer.setClearColor(0x111111, 1);
 }
 animate();
